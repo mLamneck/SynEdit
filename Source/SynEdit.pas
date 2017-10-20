@@ -1,4 +1,4 @@
-{-------------------------------------------------------------------------------
+﻿{-------------------------------------------------------------------------------
 The contents of this file are subject to the Mozilla Public License
 Version 1.1 (the "License"); you may not use this file except in compliance
 with the License. You may obtain a copy of the License at
@@ -225,7 +225,8 @@ type
     eoSpecialLineDefaultFg,    //disables the foreground text color override when using the OnSpecialLineColor event
     eoTabIndent,               //When active <Tab> and <Shift><Tab> act as block indent, unindent when text is selected
     eoTabsToSpaces,            //Converts a tab character to a specified number of space characters
-    eoTrimTrailingSpaces       //Spaces at the end of lines will be trimmed and not saved
+    eoTrimTrailingSpaces,      //Spaces at the end of lines will be trimmed and not saved
+    eoSelectedTokenHighlight   //disables the foreground text color override if a token is selected
     );
 
   TSynEditorOptions = set of TSynEditorOption;
@@ -3623,7 +3624,10 @@ var
       if Selected then
       begin
         SetBackColor(colSelBG);
-        SetForeColor(colSelFG);
+        if eoSelectedTokenHighlight in options then
+          SetForeColor(colFG)
+        else
+          SetForeColor(colSelFG);
         Canvas.Brush.Color := colSelBG;
       end
       else begin

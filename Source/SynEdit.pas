@@ -786,6 +786,8 @@ type
       var Foreground, Background: TColor): Boolean; virtual;
     procedure DoOnSpecialTokenAttributes(ALine, APos: Integer; const AToken: string; var FG, BG: TColor;
       var AStyle: TFontStyles);
+    procedure DoOnSpecialTokenAttributes2(ALine, APos: Integer; const AToken: string;
+      var aSpecial : boolean; var FG, BG: TColor; var AStyle: TFontStyles);
     procedure DoOnStatusChange(Changes: TSynStatusChanges); virtual;
     function GetSelEnd: Integer;
     function GetSelStart: Integer;
@@ -3531,6 +3533,11 @@ var
     TabString: UnicodeString;
     FG, BG: TColor;
     Style: TFontStyles;
+
+    //color is explicity set in OnSpecialTokenAttributesEvent
+    //used in setDrawingColors and PaintHighlightToken
+    //do not change them in setDrawingColors even if token is selected
+    explicitColor : boolean;
   end;
 {$IFNDEF SYN_CLX}
   dc: HDC;
@@ -3621,7 +3628,7 @@ var
   procedure SetDrawingColors(Selected: Boolean);
   begin
     with FTextDrawer do
-      if Selected then
+      if Selected and not tokenAccu.explicitColor then
       begin
         SetBackColor(colSelBG);
         if eoSelectedTokenHighlight in options then
@@ -3840,7 +3847,7 @@ var
     if (TokenAccu.Len > 0) then
     begin
       // Initialize the colors and the font style.
-      if not bSpecialLine then
+      if (not bSpecialLine) or TokenAccu.explicitColor then
       begin
         colBG := TokenAccu.BG;
         colFG := TokenAccu.FG;
@@ -3946,7 +3953,8 @@ var
   procedure AddHighlightToken(const Token: UnicodeString;
     CharsBefore, TokenLen: Integer;
     Foreground, Background: TColor;
-    Style: TFontStyles);
+    Style: TFontStyles;
+    _special : boolean = false);
   var
     bCanAppend: Boolean;
     bSpacesTest, bIsSpaces: Boolean;
@@ -3973,7 +3981,7 @@ var
 
   begin
     if (Background = clNone) or
-      ((ActiveLineColor <> clNone) and (bCurrentLine)) then
+      ((ActiveLineColor <> clNone) and (bCurrentLine) and (not _special)) then
     begin
       Background := colEditorBG;
     end;
@@ -4028,6 +4036,7 @@ var
       TokenAccu.FG := Foreground;
       TokenAccu.BG := Background;
       TokenAccu.Style := Style;
+      TokenAccu.explicitColor := _special;
     end;
   end;
 
@@ -4047,6 +4056,7 @@ var
     vEndRow: Integer;
     TokenFG, TokenBG: TColor;
     TokenStyle: TFontStyles;
+    specialTokenStyle : boolean;
   begin
     // Initialize rcLine for drawing. Note that Top and Bottom are updated
     // inside the loop. Get only the starting point for this.
@@ -4238,8 +4248,8 @@ var
                 TokenBG := colBG;
                 TokenStyle := Font.Style;
               end;
-              DoOnSpecialTokenAttributes(nLine, nTokenPos, sToken, TokenFG, TokenBG, TokenStyle);
-              AddHighlightToken(sToken, nTokenPos, nTokenLen, TokenFG, TokenBG, TokenStyle);
+              DoOnSpecialTokenAttributes2(nLine, nTokenPos, sToken, specialTokenStyle, TokenFG, TokenBG, TokenStyle);
+              AddHighlightToken(sToken, nTokenPos, nTokenLen, TokenFG, TokenBG, TokenStyle, specialTokenStyle);
             end;
             // Let the highlighter scan the next token.
             FHighlighter.Next;
@@ -11662,6 +11672,16 @@ begin
   begin
     Special := False;
     FOnSpecialTokenAttributes(Self, ALine, APos, AToken, Special, FG, BG, AStyle);
+  end;
+end;
+
+procedure TCustomSynEdit.DoOnSpecialTokenAttributes2(ALine, APos: Integer; const AToken: string;
+  var aSpecial : boolean; var FG, BG: TColor; var AStyle: TFontStyles);
+begin
+  if Assigned(FOnSpecialTokenAttributes) then
+  begin
+    ASpecial := False;
+    FOnSpecialTokenAttributes(Self, ALine, APos, AToken, ASpecial, FG, BG, AStyle);
   end;
 end;
 

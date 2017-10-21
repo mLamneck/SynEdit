@@ -11678,9 +11678,9 @@ end;
 procedure TCustomSynEdit.DoOnSpecialTokenAttributes2(ALine, APos: Integer; const AToken: string;
   var aSpecial : boolean; var FG, BG: TColor; var AStyle: TFontStyles);
 begin
+  ASpecial := False;
   if Assigned(FOnSpecialTokenAttributes) then
   begin
-    ASpecial := False;
     FOnSpecialTokenAttributes(Self, ALine, APos, AToken, ASpecial, FG, BG, AStyle);
   end;
 end;

@@ -296,7 +296,20 @@ begin
           // indent lines
           if (IndentLen > 0) and (Temp.Count > 1) then
           begin
-            s := UnicodeStringOfChar(' ', IndentLen);
+            //we don´t want to insert spaces if current line has tabs as prefix
+            //we change the following line to the block below to determine
+            //s as prefix for the inserted lines
+            //s := UnicodeStringOfChar(' ', IndentLen);
+            s := '';
+            for i := 1 to AEditor.BlockBegin.Char - 1 do
+            begin
+              case AEditor.Lines[AEditor.BlockBegin.Line-1][i] of
+                #9 :
+                  s := s + #9;
+                else
+                  s := s + ' ';
+              end;
+            end;
             for i := 1 to Temp.Count - 1 do
               Temp[i] := s + Temp[i];
           end;

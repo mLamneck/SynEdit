@@ -4068,7 +4068,11 @@ var
     begin
       TokenAccu.MaxLen := Max(128, FCharsInWindow);
       SetLength(TokenAccu.s, TokenAccu.MaxLen);
-    end;
+    end
+    else
+      //initialize flag in case of no highlighter
+      TokenAccu.explicitColor := false;
+
     // Now loop through all the lines. The indices are valid for Lines.
     for nLine := vFirstLine to vLastLine do
     begin
